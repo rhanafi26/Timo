@@ -25,7 +25,7 @@
 
     <fragment
         android:id="@+id/laporanFragment"
-        android:name="com.anggi.timo.LaporanFragment"
+        android:name="com.anggi.timo.laporan.LaporanFragment"
         android:label="fragment_laporan"
         tools:layout="@layout/fragment_laporan" />
 </navigation>
