@@ -39,6 +39,7 @@ class LaporanFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         adapter = LaporanAdapter(listLaporan)
         recyclerView.adapter = adapter
+        recyclerView.isNestedScrollingEnabled = false
 
         fun showChart(data: List<PieEntry>, title: String) {
             val dataSet = PieDataSet(data, title)
