@@ -15,7 +15,7 @@ class DashboardAdapter(
         val tvAggregate: TextView = itemView.findViewById(R.id.aggregate)
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvDuration: TextView = itemView.findViewById(R.id.tvDuration)
-        val tvPercent: TextView = itemView.findViewById(R.id.tvPercent)
+        val tvPercent: TextView = itemView.findViewById(R.id.tvPercentage)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
