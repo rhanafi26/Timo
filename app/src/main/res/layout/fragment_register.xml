@@ -1,14 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="24dp"
     tools:context=".authentication.RegisterFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/text_welcome_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome to TIMO"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
 
-</FrameLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/text_sign_up_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="SIGN UP"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/text_welcome_register"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/label_email_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="EMAIL"
+        android:textSize="14sp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="#FFC0CB"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/text_sign_up_title"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/input_email_register"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/example_email"
+        android:inputType="textEmailAddress"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:backgroundTint="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/label_email_register"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/label_username_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="USERNAME"
+        android:textSize="14sp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="#FFC0CB"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/input_email_register"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/input_username_register"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="username"
+        android:inputType="textPassword"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:backgroundTint="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/label_username_register"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/label_status_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="STATUS"
+        android:textSize="14sp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="#FFC0CB"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/input_username_register"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/input_status_register"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="pilih salah satu"
+        android:inputType="textPassword"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:backgroundTint="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/label_status_register"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/label_passwordsignup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="PASSWORD"
+        android:textSize="14sp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="#FFC0CB"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/input_status_register"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/input_passwordsignup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="*******"
+        android:inputType="textPassword"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:backgroundTint="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/label_passwordsignup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/button_sign_up"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:text="SIGN UP"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#007bff"
+        app:layout_constraintTop_toBottomOf="@id/input_passwordsignup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/text_registered"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sudah Punya Akun?"
+        android:textColor="@android:color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/text_sign_in_here"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign In Here"
+        android:textColor="#007bff"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
