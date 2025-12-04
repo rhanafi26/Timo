@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -30,6 +32,8 @@ class RegisterFragment : Fragment() {
         val inputEmail: EditText = view.findViewById(R.id.input_email_register)
         val inputUsername: EditText = view.findViewById(R.id.input_username_register)
         val inputPassword: EditText = view.findViewById(R.id.input_passwordsignup)
+        val signUpButton: Button = view.findViewById(R.id.button_sign_up)
+        val signInText: TextView = view.findViewById(R.id.text_sign_in_here)
 
         signUpButton.setOnClickListener{
             val email = inputEmail.text.toString().trim()
@@ -47,7 +51,7 @@ class RegisterFragment : Fragment() {
             activity?.finish()
         }
 
-        SignInText.setOnclickListener{
+        signInText.setOnclickListener{
             try {
                 findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
             } catch (e: IllegalArgumentException) {
