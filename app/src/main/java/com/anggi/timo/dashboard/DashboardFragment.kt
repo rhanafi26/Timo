@@ -88,8 +88,6 @@ class DashboardFragment : Fragment() {
             }
         }
 
-// --- A. SETUP TOMBOL PLAY/PAUSE (LINGKARAN) ---
-
         timerButton.setOnClickListener {
             if (isRunning) {
                 pauseStopwatch()
@@ -106,18 +104,9 @@ class DashboardFragment : Fragment() {
 
 
         btnFinish.setOnClickListener {
-            // 1. Matikan Timer
             pauseStopwatch()
-
-            // 2. Ambil waktu terakhir
             val finalTime = rootView.findViewById<TextView>(R.id.tvTimerMain).text.toString()
-
-            // 3. (Opsional) Tampilkan pesan atau simpan data
             Toast.makeText(requireContext(), "Selesai! Waktu: $finalTime", Toast.LENGTH_SHORT).show()
-
-
-
-            // 4. (Opsional) Reset timer kembali ke 0 jika diperlukan
              seconds = 0
              updateTimerText()
         }

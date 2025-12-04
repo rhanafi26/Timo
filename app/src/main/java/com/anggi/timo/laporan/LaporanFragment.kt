@@ -88,13 +88,13 @@ class LaporanFragment : Fragment() {
             adapter.notifyDataSetChanged()
         }
 
-        // Button Action
+
         btnHarian.setOnClickListener {
             selectButton(btnHarian)
             showChart(
                 listOf(
-                    PieEntry(40f, "Transaksi A"),
-                    PieEntry(60f, "Transaksi B")
+                    PieEntry(40f, "A"),
+                    PieEntry(60f, "B")
                 ), "Harian"
             )
             loadHarian()
@@ -125,7 +125,6 @@ class LaporanFragment : Fragment() {
             loadTahunan()
         }
 
-        // Trigger default
         btnHarian.performClick()
 
         return rootView

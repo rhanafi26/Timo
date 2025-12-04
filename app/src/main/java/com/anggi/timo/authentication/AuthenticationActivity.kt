@@ -8,7 +8,6 @@ class AuthenticationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ✅ PASTIKAN R.layout.activity_authentication SUDAH ADA
         setContentView(R.layout.activity_authentication)
     }
 }

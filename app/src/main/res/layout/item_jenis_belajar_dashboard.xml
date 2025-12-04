@@ -15,7 +15,6 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="14dp">
 
-        <!-- A (Aggregate) -->
         <TextView
             android:id="@+id/aggregate"
             android:layout_width="wrap_content"
@@ -28,7 +27,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Title (Kotlin) -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
@@ -43,7 +41,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Percentage (0%) -->
         <TextView
             android:id="@+id/tvPercentage"
             android:layout_width="wrap_content"
@@ -54,7 +51,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Duration (1:00:00) -->
         <TextView
             android:id="@+id/tvDuration"
             android:layout_width="wrap_content"

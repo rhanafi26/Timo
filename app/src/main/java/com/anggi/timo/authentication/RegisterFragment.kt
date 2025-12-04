@@ -27,8 +27,6 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Mengambil referensi view
-
         val inputEmail: EditText = view.findViewById(R.id.input_email_register)
         val inputUsername: EditText = view.findViewById(R.id.input_username_register)
         val inputPassword: EditText = view.findViewById(R.id.input_passwordsignup)
@@ -51,7 +49,7 @@ class RegisterFragment : Fragment() {
             activity?.finish()
         }
 
-        signInText.setOnclickListener{
+        signInText.setOnClickListener{
             try {
                 findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
             } catch (e: IllegalArgumentException) {

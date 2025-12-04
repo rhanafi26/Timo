@@ -7,9 +7,8 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:padding="24dp"
-    tools:context=".authentication.RegisterFragment">
+    tools:context="com.timo.app.authentication.RegisterFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
         android:id="@+id/text_welcome_register"
         android:layout_width="wrap_content"
