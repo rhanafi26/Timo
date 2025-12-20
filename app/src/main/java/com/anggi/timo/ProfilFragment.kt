@@ -23,6 +23,7 @@ class ProfilFragment : Fragment() {
 
     private var isEditing = false
     private var currentCalendar: Calendar = Calendar.getInstance()
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,11 +35,8 @@ class ProfilFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val pref = requireActivity().getSharedPreferences("session", 0)
-        val username = pref.getString("username", null)
-        val email = pref.getString("email", null)
-        binding.emailValue.setText(email)
-        binding.usernameValue.setText(username)
+        sharedPreferences = requireActivity().getSharedPreferences("session", Context.MODE_PRIVATE)
+
 
         loadProfileData()
         updateDateDisplay()
@@ -124,9 +122,9 @@ class ProfilFragment : Fragment() {
     }
 
     private fun loadProfileData() {
-        val pref = requireActivity().getSharedPreferences("session", 0)
-        val username = pref.getString("username", null)
-        val email = pref.getString("email", null)
+
+        val username = sharedPreferences.getString("username", "Pengguna")
+        val email = sharedPreferences.getString("email", "email@gmail.com")
         binding.emailValue.setText(email)
         binding.usernameValue.setText(username)
         val totalTime = "12:45:30"
