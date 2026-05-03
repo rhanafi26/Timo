@@ -103,13 +103,8 @@ It works as a simple and efficient study timer to help users stay productive and
 
 ## 📂 Repository
 
-**GitHub:** [https://github.com/rhanafi26/Tim](https://github.com/rhanafi26/Tim)
+**GitHub:** [https://github.com/rhanafi26/Tim](https://github.com/rhanafi26/Timo)
 
----
-
-## 📄 License
-
-[Add your license type here - e.g., MIT, GPL-3.0]
 
 ---
 
