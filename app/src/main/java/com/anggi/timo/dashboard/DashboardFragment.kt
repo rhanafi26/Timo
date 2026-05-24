@@ -19,6 +19,7 @@ import com.anggi.timo.TambahTujuanDialog
 class DashboardFragment : Fragment() {
     private lateinit var adapter: DashboardAdapter
     private val listDashboard = mutableListOf<DashboardModel>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,11 +41,11 @@ class DashboardFragment : Fragment() {
         val timerIcon = rootView.findViewById<ImageView>(R.id.ivTimerIcon)
 
         var seconds = 0
-         var isRunning = false
+        var isRunning = false
         val btnFinish = rootView.findViewById<Button>(R.id.btnFinish)
 
-         val handler = android.os.Handler(android.os.Looper.getMainLooper())
-         lateinit var runnable: Runnable
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        lateinit var runnable: Runnable
 
         fun updateTimerText() {
             val hours = seconds / 3600
@@ -61,7 +62,7 @@ class DashboardFragment : Fragment() {
             }
         }
 
-         fun startStopwatch() {
+        fun startStopwatch() {
             if (!isRunning) {
 
                 runnable = object : Runnable {
@@ -78,7 +79,7 @@ class DashboardFragment : Fragment() {
             }
         }
 
-         fun pauseStopwatch() {
+        fun pauseStopwatch() {
             if (isRunning) {
 
                 handler.removeCallbacks(runnable)
@@ -95,23 +96,36 @@ class DashboardFragment : Fragment() {
                 startStopwatch()
             }
         }
+
         val btnTambah = rootView.findViewById<CardView>(R.id.btnTambah)
         btnTambah.setOnClickListener {
             TambahTujuanDialog().show(parentFragmentManager, "TambahTujuanDialog")
         }
 
-
-
-
         btnFinish.setOnClickListener {
             pauseStopwatch()
             val finalTime = rootView.findViewById<TextView>(R.id.tvTimerMain).text.toString()
             Toast.makeText(requireContext(), "Selesai! Waktu: $finalTime", Toast.LENGTH_SHORT).show()
-             seconds = 0
-             updateTimerText()
+            seconds = 0
+            updateTimerText()
+        }
+
+
+        val notificationBell = rootView.findViewById<ImageView>(R.id.ivNotificationBell)
+        val notificationBadge = rootView.findViewById<View>(R.id.vNotificationBadge)
+        val notificationPopup = rootView.findViewById<CardView>(R.id.cvNotificationPopup)
+
+        notificationBell.setOnClickListener {
+            if (notificationPopup.visibility == View.VISIBLE) {
+
+                notificationPopup.visibility = View.GONE
+            } else {
+
+                notificationPopup.visibility = View.VISIBLE
+                notificationBadge.visibility = View.GONE
+            }
         }
 
         return rootView
     }
-
 }
