@@ -8,14 +8,15 @@ data class User(
 )
 
 data class TypeStudy(
-    val id: Int,
     val title: String,
-    val target: Int
-)
+    val target: Int,
+    val userId: String,
+    )
 
 data class TimeStudy(
     val id: Int,
     val time: Int,
+    val breakTime: Int,
     val created: Long,
     val userId: Int,
     val typeStudyId: Int

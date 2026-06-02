@@ -5,7 +5,10 @@ import android.app.Dialog
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import com.anggi.timo.ViewModel.StudyViewModel
+import com.anggi.timo.utils.ProgressUtils
 
 class TambahTujuanDialog : DialogFragment() {
 
@@ -17,11 +20,46 @@ class TambahTujuanDialog : DialogFragment() {
         val etJudul = view.findViewById<EditText>(R.id.etJudul)
         val etWaktu = view.findViewById<EditText>(R.id.etWaktu)
         val btnSimpan = view.findViewById<Button>(R.id.btnSimpan)
-
         btnSimpan.setOnClickListener {
-            val judul = etJudul.text.toString()
-            val waktu = etWaktu.text.toString()
-            dismiss()
+            val judul = etJudul.text.toString().trim()
+            val waktu = etWaktu.text.toString().trim()
+            val waktuDetik = ProgressUtils.timeToSeconds(waktu)
+            if (judul.isEmpty()) {
+                etJudul.error = "Judul tidak boleh kosong"
+                return@setOnClickListener
+            }
+
+            if (waktu.isEmpty()) {
+                etWaktu.error = "Waktu tidak boleh kosong"
+                return@setOnClickListener
+            }
+
+            btnSimpan.isEnabled = false
+
+            StudyViewModel().tambahJenisBelajar(
+                judul = judul,
+                waktu = waktuDetik,
+                onSuccess = {
+
+                    Toast.makeText(
+                        requireContext(),
+                        "Tujuan berhasil ditambahkan",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    dismiss()
+                },
+                onError = { error ->
+
+                    btnSimpan.isEnabled = true
+
+                    Toast.makeText(
+                        requireContext(),
+                        error,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
         }
 
         builder.setView(view)
