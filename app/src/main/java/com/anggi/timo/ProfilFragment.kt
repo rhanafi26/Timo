@@ -1,18 +1,18 @@
 package com.anggi.timo
 
 import android.app.DatePickerDialog
-import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.anggi.timo.databinding.FragmentProfilBinding
 import androidx.navigation.fragment.findNavController
-import com.anggi.timo.Model.User
+import com.anggi.timo.authentication.AuthenticationActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -21,10 +21,10 @@ class ProfilFragment : Fragment() {
 
     private var _binding: FragmentProfilBinding? = null
     private val binding get() = _binding!!
-
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     private var isEditing = false
     private var currentCalendar: Calendar = Calendar.getInstance()
-    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,25 +36,28 @@ class ProfilFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        sharedPreferences = requireActivity().getSharedPreferences("session", Context.MODE_PRIVATE)
 
-
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
         loadProfileData()
         updateDateDisplay()
         setEditMode(false)
 
-        binding.tvEditProfileTop.setOnClickListener(null)
+        binding.btnLogout.setOnClickListener {
 
+            FirebaseAuth.getInstance().signOut()
+
+            val intent = Intent(
+                requireActivity(),
+                AuthenticationActivity::class.java
+            )
+
+            startActivity(intent)
+            requireActivity().finish()
+        }
         binding.btnEditProfileBottom.setOnClickListener {
             if (isEditing) {
-                if (saveProfileData(view)) {
-
-                    Toast.makeText(
-                        context,
-                        "Data Berhasil Disimpan! Kembali ke Dashboard.",
-                        Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_profilFragment_to_dashboardFragment)
-                }
+                saveProfileData()
             } else {
                 startEditing()
             }
@@ -70,7 +73,6 @@ class ProfilFragment : Fragment() {
                 Toast.LENGTH_SHORT).show()
         }
 
-        binding.tvEditProfileTop.setOnClickListener(null)
     }
 
     private fun startEditing() {
@@ -79,55 +81,79 @@ class ProfilFragment : Fragment() {
         setEditMode(true)
         Toast.makeText(
             context,
-            "Edit Profile! Silahkan ubah Email dan Username.",
+            "Silakan ubah username.",
             Toast.LENGTH_LONG).show()
-        binding.emailValue.requestFocus()
+        binding.usernameValue.requestFocus()
     }
 
-    private fun saveProfileData(view: View): Boolean {
-        val newEmail = binding.emailValue.text.toString()
-        val newUsername = binding.usernameValue.text.toString()
+    private fun saveProfileData() {
+        val username = binding.usernameValue.text.toString().trim()
 
-        if (newEmail.isBlank() || newUsername.isBlank()) {
-            Toast.makeText(context,
-                "Email dan Username tidak boleh kosong!",
-                Toast.LENGTH_SHORT).show()
-            return false
+        if (username.isEmpty()) {
+            binding.usernameValue.error = "Username tidak boleh kosong"
+            return
         }
 
-        val pref = requireActivity().getSharedPreferences("session", 0)
-        val editor = pref.edit()
-        editor.putString("email", newEmail)
-        editor.putString("username", newUsername)
-        editor.apply()
+        val uid = auth.currentUser?.uid ?: return
 
-        isEditing = false
+        db.collection("users")
+            .document(uid)
+            .update("username", username)
+            .addOnSuccessListener {
 
-        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-        imm?.hideSoftInputFromWindow(view.windowToken, 0)
+                isEditing = false
+                setEditMode(false)
+                binding.btnEditProfileBottom.text = "EDIT PROFILE"
 
-        return true
+                Toast.makeText(
+                    requireContext(),
+                    "Username berhasil diperbarui",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                findNavController()
+                    .navigate(R.id.action_profilFragment_to_dashboardFragment)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    requireContext(),
+                    e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
     }
 
 
     private fun setEditMode(editable: Boolean) {
-        val editViews = listOf(binding.emailValue, binding.usernameValue)
+        val editViews = binding.usernameValue
+        editViews.isFocusable = editable
+        editViews.isFocusableInTouchMode = editable
+        editViews.isClickable = editable
+        editViews.setBackgroundResource(if (editable) R.drawable.edittext_border else 0)
 
-        for (et in editViews) {
-            et.isFocusable = editable
-            et.isFocusableInTouchMode = editable
-            et.isClickable = editable
-
-            et.setBackgroundResource(if (editable) R.drawable.edittext_border else 0)
-        }
     }
 
     private fun loadProfileData() {
+        val currentUser = auth.currentUser ?: return
 
-        val username = sharedPreferences.getString("username", "Pengguna")
-        val email = sharedPreferences.getString("email", "email@gmail.com")
-        binding.emailValue.setText(email)
-        binding.usernameValue.setText(username)
+        binding.emailValue.setText(currentUser.email)
+        db.collection("users")
+            .document(currentUser.uid)
+            .get()
+            .addOnSuccessListener { document ->
+
+                if (document.exists()) {
+
+                    val username =
+                        document.getString("username") ?: "Pengguna"
+
+                    binding.usernameValue.setText(username)
+
+                } else {
+
+                    binding.usernameValue.setText("Pengguna")
+                }
+            }
         val totalTime = "12:45:30"
         binding.totalTime.text = totalTime
     }

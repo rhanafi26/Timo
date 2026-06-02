@@ -15,9 +15,12 @@ import com.anggi.timo.MainActivity
 import com.anggi.timo.R
 import androidx.fragment.app.viewModels
 import com.anggi.timo.ViewModel.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginFragment : Fragment() {
-
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -28,7 +31,8 @@ class LoginFragment : Fragment() {
     private val authViewModel: AuthViewModel by viewModels()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         val inputEmail: EditText = view.findViewById(R.id.input_email)
         val inputPassword: EditText = view.findViewById(R.id.input_password)
@@ -45,28 +49,45 @@ class LoginFragment : Fragment() {
                 Toast.makeText(context, "Email dan Password tidak boleh kosong.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            authViewModel.login(email, password)
-        }
+            signInButton.isEnabled = false
+            signInButton.text = "Loading..."
 
-        authViewModel.loginResult.observe(viewLifecycleOwner) { user ->
-            if (user != null)
-            {
-                val pref = requireActivity().getSharedPreferences("session", 0)
-                with(pref.edit()) {
-                    putInt("userId", user.id)
-                    putString("username", user.username)
-                    putString("email", user.email)
-                    apply()
+
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(requireActivity()) { task ->
+
+                    signInButton.isEnabled = true
+                    signInButton.text = "Sign In"
+
+                    if (task.isSuccessful) {
+
+                        Toast.makeText(
+                            context,
+                            "Login berhasil",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        startActivity(
+                            Intent(
+                                requireActivity(),
+                                MainActivity::class.java
+                            )
+                        )
+
+                        requireActivity().finish()
+
+                    } else {
+
+                        Toast.makeText(
+                            context,
+                            task.exception?.message ?: "Login gagal",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+
                 }
-                Toast.makeText(context, "Login Berhasil!", Toast.LENGTH_SHORT).show()
 
-                val intent = Intent(requireActivity(), MainActivity::class.java)
-                startActivity(intent)
-                requireActivity().finish()
-
-            } else {
-                Toast.makeText(context, "Email atau Password salah!", Toast.LENGTH_SHORT).show()
-            }
         }
 
         signUpText.setOnClickListener {
