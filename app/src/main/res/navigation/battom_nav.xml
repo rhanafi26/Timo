@@ -28,4 +28,9 @@
         android:name="com.anggi.timo.laporan.LaporanFragment"
         android:label="fragment_laporan"
         tools:layout="@layout/fragment_laporan" />
+    <fragment
+        android:id="@+id/comunityFragment"
+        android:name="com.anggi.timo.comunitypackage.CommunityFragment"
+        android:label="fragment_comunity"
+        tools:layout="@layout/fragment_comunity"/>
 </navigation>
