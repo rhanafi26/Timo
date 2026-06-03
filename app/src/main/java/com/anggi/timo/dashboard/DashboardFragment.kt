@@ -11,12 +11,18 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.util.TimeUtils.formatDuration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.anggi.timo.R
 import com.anggi.timo.TambahTujuanDialog
+import com.anggi.timo.utils.ProgressUtils
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class DashboardFragment : Fragment() {
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     private lateinit var adapter: DashboardAdapter
     private val listDashboard = mutableListOf<DashboardModel>()
 
@@ -26,12 +32,11 @@ class DashboardFragment : Fragment() {
     ): View? {
         val rootView =  inflater.inflate(R.layout.fragment_dashboard, container, false)
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerViewDashboard)
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        listDashboard.clear()
-        listDashboard.add(DashboardModel("A", "Kotlin", "1:00:00","100%" ))
-        listDashboard.add(DashboardModel("A", "Kotlin", "1:00:00","100%" ))
-        listDashboard.add(DashboardModel("A", "Kotlin", "1:00:00","100%" ))
+        loadTargetBelajar()
         adapter = DashboardAdapter(listDashboard)
         recyclerView.adapter = adapter
         recyclerView.isNestedScrollingEnabled = false
@@ -127,5 +132,45 @@ class DashboardFragment : Fragment() {
         }
 
         return rootView
+    }
+    private fun loadTargetBelajar() {
+
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("tujuan")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { documents ->
+
+                listDashboard.clear()
+
+                for (document in documents) {
+
+                    val title =
+                        document.getString("title") ?: ""
+
+                    val target =
+                        document.getLong("target")?.toInt() ?: 0
+
+                    listDashboard.add(
+                        DashboardModel(
+                            "A",
+                            title,
+                             ProgressUtils.formatDuration(target),
+                            "0%"
+                        )
+                    )
+                }
+
+                adapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { e ->
+
+                Toast.makeText(
+                    requireContext(),
+                    e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
     }
 }

@@ -13,10 +13,13 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.anggi.timo.MainActivity
 import com.anggi.timo.R
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 class RegisterFragment : Fragment() {
-
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -26,7 +29,8 @@ class RegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
         val inputEmail: EditText = view.findViewById(R.id.input_email_register)
         val inputUsername: EditText = view.findViewById(R.id.input_username_register)
         val inputPassword: EditText = view.findViewById(R.id.input_passwordsignup)
@@ -42,11 +46,70 @@ class RegisterFragment : Fragment() {
                 Toast.makeText(context, "Kolom tidak boleh kosong", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            Toast.makeText(context, "Login Berhasil $email", Toast.LENGTH_LONG ).show()
+
+            signUpButton.isEnabled = false
+            signUpButton.text = "Loading..."
 
             val intent = Intent(activity, MainActivity::class.java)
-            startActivity(intent)
-            activity?.finish()
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(requireActivity()) { task ->
+
+                    if (task.isSuccessful) {
+
+                        val firebaseUser = auth.currentUser
+
+                        if (firebaseUser != null) {
+
+                            val userData = hashMapOf(
+                                "uid" to firebaseUser.uid,
+                                "username" to username,
+                                "email" to email,
+                                "createdAt" to System.currentTimeMillis()
+                            )
+
+                            db.collection("users")
+                                .document(firebaseUser.uid)
+                                .set(userData)
+                                .addOnSuccessListener {
+
+                                    signUpButton.isEnabled = true
+                                    signUpButton.text = "Sign Up"
+
+                                    Toast.makeText(
+                                        context,
+                                        "Registrasi berhasil",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    startActivity(intent)
+
+                                    requireActivity().finish()
+                                }
+                                .addOnFailureListener { e ->
+
+                                    signUpButton.isEnabled = true
+                                    signUpButton.text = "Sign Up"
+
+                                    Toast.makeText(
+                                        context,
+                                        "Gagal menyimpan data: ${e.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                        }
+
+                    } else {
+
+                        signUpButton.isEnabled = true
+                        signUpButton.text = "Sign Up"
+
+                        Toast.makeText(
+                            context,
+                            "Registrasi gagal: ${task.exception?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
         }
 
         signInText.setOnClickListener{
