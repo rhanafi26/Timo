@@ -31,4 +31,30 @@ object ProgressUtils {
         )
     }
 
+    fun hitungTingkatFokus(
+        totalStudyTime: Int,
+        totalBreaks: Int = 0
+    ): String {
+        // Calculate total 20-minute sessions
+        val sesi20Menit = totalStudyTime / 1200
+
+        // If there are breaks, calculate break frequency per 20 minutes
+        return if (sesi20Menit > 0 && totalBreaks > 0) {
+            val breaksPerSession = totalBreaks / sesi20Menit
+
+            when {
+                breaksPerSession <= 5 -> "A"
+                breaksPerSession <= 10 -> "B"
+                breaksPerSession <= 15 -> "C"
+                breaksPerSession <= 20 -> "D"
+                else -> "E"
+            }
+        } else if (sesi20Menit > 0) {
+            // No breaks = perfect focus
+            "A+"
+        } else {
+            "D"
+        }
+    }
+
 }
