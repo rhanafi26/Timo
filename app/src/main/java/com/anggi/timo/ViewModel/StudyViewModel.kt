@@ -214,4 +214,82 @@ class StudyViewModel : ViewModel() {
             }
         }
     }
+
+    fun getAllStudyData(
+        callback: (List<TimeStudy>) -> Unit
+    ) {
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("time_study")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { docs ->
+
+                val list = mutableListOf<TimeStudy>()
+
+                for (doc in docs) {
+                    doc.toObject(TimeStudy::class.java)
+                        .let { list.add(it) }
+                }
+
+                callback(list)
+            }
+    }
+
+    fun getAllTypeStudy(
+        callback: (List<TypeStudy>) -> Unit
+    ) {
+
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("tujuan")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { docs ->
+
+                val list = mutableListOf<TypeStudy>()
+
+                for (doc in docs) {
+                    val item =
+                        doc.toObject(TypeStudy::class.java)
+
+                    item.id = doc.id
+                    list.add(item)
+                }
+
+                callback(list)
+            }
+    }
+
+    fun getStudyStatistic(
+        typeStudyId: String,
+        callback: (Int, Int) -> Unit
+    ) {
+
+        db.collection("time_study")
+            .whereEqualTo("typeStudyId", typeStudyId)
+            .get()
+            .addOnSuccessListener { documents ->
+
+                var totalStudy = 0
+                var totalBreak = 0
+
+                for (doc in documents) {
+
+                    totalStudy +=
+                        doc.getLong("time")?.toInt() ?: 0
+
+                    totalBreak +=
+                        doc.getLong("breakTime")?.toInt() ?: 0
+                }
+
+                callback(
+                    totalStudy,
+                    totalBreak
+                )
+            }
+            .addOnFailureListener {
+                callback(0, 0)
+            }
+    }
 }
