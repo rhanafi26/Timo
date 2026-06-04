@@ -14,10 +14,9 @@ data class TypeStudy(
     )
 
 data class TimeStudy(
-    val id: Int,
     val time: Int,
     val breakTime: Int,
-    val created: Long,
-    val userId: Int,
-    val typeStudyId: Int
+    val created: String,
+    val userId: String,
+    val typeStudyId: String
 )

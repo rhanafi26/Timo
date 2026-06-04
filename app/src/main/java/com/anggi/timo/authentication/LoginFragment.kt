@@ -13,8 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.anggi.timo.MainActivity
 import com.anggi.timo.R
-import androidx.fragment.app.viewModels
-import com.anggi.timo.ViewModel.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -28,7 +26,6 @@ class LoginFragment : Fragment() {
 
         return inflater.inflate(R.layout.fragment_login, container, false)
     }
-    private val authViewModel: AuthViewModel by viewModels()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         auth = FirebaseAuth.getInstance()

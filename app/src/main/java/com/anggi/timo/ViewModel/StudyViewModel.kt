@@ -1,13 +1,17 @@
 package com.anggi.timo.ViewModel
 
 import androidx.lifecycle.ViewModel
+import com.anggi.timo.Model.TimeStudy
 import com.anggi.timo.Model.TypeStudy
+import com.anggi.timo.utils.ProgressUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
 
 class StudyViewModel : ViewModel() {
-    val auth = FirebaseAuth.getInstance()
-    val db = FirebaseFirestore.getInstance()
+
+    private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     fun tambahJenisBelajar(
         judul: String,
@@ -39,45 +43,175 @@ class StudyViewModel : ViewModel() {
             }
     }
 
+    fun saveTimeStudy(
+        typeStudyId: String,
+        studyTime: Int,
+        breakTime: Int = 0
+    ) {
 
+        val uid = auth.currentUser?.uid ?: return
+        val dateFormat = java.text.SimpleDateFormat("dd-MM-yyyy HH:mm", java.util.Locale.getDefault())
+        val formattedDate = dateFormat.format(java.util.Date())
+        val data = TimeStudy(
+            time = studyTime,
+            breakTime = breakTime,
+            created = formattedDate,  // Now storing as formatted string
+            userId = uid,
+            typeStudyId = typeStudyId
+        )
 
+        db.collection("time_study")
+            .add(data)
+    }
 
+    fun getTotalStudyTime(
+        typeStudyId: String,
+        callback: (Int) -> Unit
+    ) {
 
-//    fun loadTypeStudies(userId: String) {
-//        db.collection("target_belajar")
-//            .whereEqualTo("userId", uid)
-//            .get()
-//            .addOnSuccessListener { documents ->
-//
-//                listDashboard.clear()
-//
-//                for (document in documents) {
-//
-//                    val title = document.getString("title") ?: ""
-//                    val target = document.getLong("target") ?: 0
-//
-//                    listDashboard.add(
-//                        DashboardModel(
-//                            "A",
-//                            title,
-//                            StudyViewModel().formatDuration(target.toInt()),
-//                            "0%"
-//                        )
-//                    )
-//                }
-//
-//            }
-//    }
+        db.collection("time_study")
+            .whereEqualTo("typeStudyId", typeStudyId)
+            .get()
+            .addOnSuccessListener { documents ->
 
-//    fun insertTimeStudy(time: Int, userId: Int, typeId: Int) {
-//        val item = TimeStudy(
-//            id = System.currentTimeMillis().toInt(),
-//            time = time,
-//            created = System.currentTimeMillis(),
-//            userId = userId,
-//            typeStudyId = typeId
-//        )
-//        InMemoryRepository.addTimeStudy(item)
-//        loadTimeStudies(userId)
-//    }
+                var total = 0
+
+                for (document in documents) {
+                    total += document.getLong("time")?.toInt() ?: 0
+                }
+
+                callback(total)
+            }
+            .addOnFailureListener {
+                callback(0)
+            }
+    }
+
+    fun getTodayStudyTime(
+        callback: (Int) -> Unit
+    ) {
+        val uid = auth.currentUser?.uid ?: return
+
+        // Get today's date in the same format as stored
+        val dateFormat = java.text.SimpleDateFormat("dd-MM-yyyy", java.util.Locale.getDefault())
+        val todayDate = dateFormat.format(java.util.Date())
+
+        db.collection("time_study")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { documents ->
+                var total = 0
+
+                for (document in documents) {
+                    val createdDate = document.getString("created") ?: ""
+                    // Check if the created date starts with today's date
+                    if (createdDate.startsWith(todayDate)) {
+                        total += document.getLong("time")?.toInt() ?: 0
+                    }
+                }
+
+                callback(total)
+            }
+            .addOnFailureListener {
+                callback(0)
+            }
+    }
+
+    fun getTotalTarget(
+        callback: (Int) -> Unit
+    ) {
+
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("tujuan")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { documents ->
+
+                var totalTarget = 0
+
+                for (document in documents) {
+                    totalTarget += document.getLong("target")?.toInt() ?: 0
+                }
+
+                callback(totalTarget)
+            }
+            .addOnFailureListener {
+                callback(0)
+            }
+    }
+
+    fun getAverageFocus(
+        callback: (String) -> Unit
+    ) {
+
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("time_study")
+            .whereEqualTo("userId", uid)
+            .get()
+            .addOnSuccessListener { documents ->
+
+                var totalScore = 0
+                var count = 0
+
+                for (document in documents) {
+
+                    val time =
+                        document.getLong("time")?.toInt() ?: 0
+
+                    val focus =
+                        ProgressUtils.hitungTingkatFokus(time)
+
+                    totalScore += when (focus) {
+                        "A" -> 5
+                        "AB" -> 4
+                        "B" -> 3
+                        "BC" -> 2
+                        "C" -> 1
+                        else -> 0
+                    }
+
+                    count++
+                }
+
+                if (count == 0) {
+                    callback("-")
+                    return@addOnSuccessListener
+                }
+
+                val average = totalScore / count
+
+                callback(
+                    when (average) {
+                        5 -> "A"
+                        4 -> "AB"
+                        3 -> "B"
+                        2 -> "BC"
+                        else -> "C"
+                    }
+                )
+            }
+            .addOnFailureListener {
+                callback("-")
+            }
+    }
+
+    fun getOverallProgress(
+        callback: (String) -> Unit
+    ) {
+
+        getTodayStudyTime { totalStudy ->
+
+            getTotalTarget { totalTarget ->
+
+                callback(
+                    ProgressUtils.hitungPersentase(
+                        totalStudy,
+                        totalTarget
+                    )
+                )
+            }
+        }
+    }
 }
