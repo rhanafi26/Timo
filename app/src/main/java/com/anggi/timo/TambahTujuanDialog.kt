@@ -23,7 +23,6 @@ class TambahTujuanDialog : DialogFragment() {
         btnSimpan.setOnClickListener {
             val judul = etJudul.text.toString().trim()
             val waktu = etWaktu.text.toString().trim()
-            val waktuDetik = ProgressUtils.timeToSeconds(waktu)
             if (judul.isEmpty()) {
                 etJudul.error = "Judul tidak boleh kosong"
                 return@setOnClickListener
@@ -33,6 +32,7 @@ class TambahTujuanDialog : DialogFragment() {
                 etWaktu.error = "Waktu tidak boleh kosong"
                 return@setOnClickListener
             }
+            val waktuDetik = ProgressUtils.timeToSeconds(waktu)
 
             btnSimpan.isEnabled = false
 
