@@ -81,7 +81,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="username"
-        android:inputType="textPassword"
+        android:inputType="text"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:paddingStart="0dp"
