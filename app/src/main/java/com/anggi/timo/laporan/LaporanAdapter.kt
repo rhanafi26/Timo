@@ -49,13 +49,9 @@ class LaporanAdapter(
         return listLaporan.size
     }
 
-    fun updateData(
-        newData: List<LaporanModel>
-    ) {
-
-        listLaporan.clear()
-        listLaporan.addAll(newData)
-
+    fun updateData(newList: List<LaporanModel>) {
+        this.listLaporan.clear()
+        this.listLaporan.addAll(newList)
         notifyDataSetChanged()
     }
 }
