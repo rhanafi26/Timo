@@ -31,13 +31,13 @@ interface LaporanBelajarDao {
     @Query("SELECT COALESCE(SUM(durasiIstirahat), 0) FROM tabel_laporan_belajar WHERE tanggal LIKE :bulan || '%'")
     fun getTotalIstirahatBulanan(bulan: String): Flow<Int>
 
-    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat FROM tabel_laporan_belajar WHERE tanggal = :tanggal GROUP BY jenisBelajar ORDER BY totalFokus DESC")
+    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat, (SUM(durasiFokus) + SUM(durasiIstirahat)) as totalBelajar FROM tabel_laporan_belajar WHERE tanggal = :tanggal GROUP BY jenisBelajar ORDER BY totalFokus DESC")
     fun getStatistikListHarian(tanggal: String): Flow<List<StatistikPelajaran>>
 
-    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat FROM tabel_laporan_belajar WHERE tanggal BETWEEN :startDate AND :endDate GROUP BY jenisBelajar ORDER BY totalFokus DESC")
+    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat, (SUM(durasiFokus) + SUM(durasiIstirahat)) as totalBelajar FROM tabel_laporan_belajar WHERE tanggal BETWEEN :startDate AND :endDate GROUP BY jenisBelajar ORDER BY totalFokus DESC")
     fun getStatistikListMingguan(startDate: String, endDate: String): Flow<List<StatistikPelajaran>>
 
-    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat FROM tabel_laporan_belajar WHERE tanggal LIKE :bulan || '%' GROUP BY jenisBelajar ORDER BY totalFokus DESC")
+    @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat, (SUM(durasiFokus) + SUM(durasiIstirahat)) as totalBelajar FROM tabel_laporan_belajar WHERE tanggal LIKE :bulan || '%' GROUP BY jenisBelajar ORDER BY totalFokus DESC")
     fun getStatistikListBulanan(bulan: String): Flow<List<StatistikPelajaran>>
 
 
