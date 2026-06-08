@@ -84,17 +84,13 @@ class LaporanFragment : Fragment() {
         return rootView
     }
 
-    // Panggil fungsi getList... dari ViewModel (BUKAN getTotal...)
-    // 1. Perbaiki Fungsi Harian
     private fun loadDailyReportRoom() {
         val tanggalDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
-        // Ganti 'getListHarian' menjadi 'getStatistikListHarian'
         roomViewModel.getStatistikListHarian(tanggalDB).observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Harian")
         }
     }
 
-    // 2. Perbaiki Fungsi Mingguan
     private fun loadWeeklyReportRoom() {
         val cal = Calendar.getInstance()
         val formatDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -102,30 +98,25 @@ class LaporanFragment : Fragment() {
         cal.add(Calendar.DAY_OF_MONTH, -7)
         val startDateDB = formatDB.format(cal.time)
 
-        // Ganti 'getListMingguan' menjadi 'getStatistikListMingguan'
         roomViewModel.getStatistikListMingguan(startDateDB, endDateDB).observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Mingguan")
         }
     }
 
-    // 3. Perbaiki Fungsi Bulanan
     private fun loadMonthlyReportRoom() {
         val bulanDB = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
 
-        // Ganti 'getListBulanan' menjadi 'getStatistikListBulanan'
         roomViewModel.getStatistikListBulanan(bulanDB).observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Bulanan")
         }
     }
 
-    // Fungsi pemroses data (Tipe data List<StatistikPelajaran> menjamin tidak merah)
     private fun processRoomDataToUI(listPelajaran: List<StatistikPelajaran>, title: String) {
         var totalFokus = 0
         var totalBreak = 0
         val entries = mutableListOf<PieEntry>()
         val laporanBaru = mutableListOf<LaporanModel>()
 
-        // 1. Cek List Kosong (Tidak akan merah karena listPelajaran adalah List)
         if (listPelajaran.isEmpty()) {
             adapter.updateData(emptyList())
             setupChart(emptyList(), title)
@@ -136,12 +127,10 @@ class LaporanFragment : Fragment() {
             return
         }
 
-        // 2. Loop Data
         for (item in listPelajaran) {
             totalFokus += item.totalFokus
             totalBreak += item.totalIstirahat
 
-            // Masukkan ke Chart
             entries.add(PieEntry(item.totalFokus.toFloat(), item.jenisBelajar))
 
 
