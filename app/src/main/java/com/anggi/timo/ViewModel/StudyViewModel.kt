@@ -63,20 +63,24 @@ class StudyViewModel : ViewModel() {
 
     fun getTotalStudyTime(
         typeStudyId: String,
-        callback: (Int) -> Unit
+        callback: (totalTime: Int, totalBreak: Int) -> Unit
     ) {
         db.collection("time_study")
             .whereEqualTo("typeStudyId", typeStudyId)
             .get()
             .addOnSuccessListener { documents ->
-                var total = 0
+                var totalTime = 0
+                var totalBreak = 0
+
                 for (document in documents) {
-                    total += document.getLong("time")?.toInt() ?: 0
+                    totalTime += document.getLong("time")?.toInt() ?: 0
+                    totalBreak += document.getLong("breakTime")?.toInt() ?: 0
                 }
-                callback(total)
+
+                callback(totalTime, totalBreak)
             }
             .addOnFailureListener {
-                callback(0)
+                callback(0, 0)
             }
     }
 
@@ -139,7 +143,8 @@ class StudyViewModel : ViewModel() {
 
                 for (document in documents) {
                     val time = document.getLong("time")?.toInt() ?: 0
-                    val focus = ProgressUtils.hitungTingkatFokus(time)
+                    val breakTime = document.getLong("breakTime")?.toInt() ?: 0
+                    val focus = ProgressUtils.hitungTingkatFokus(time, breakTime)
 
                     totalScore += when (focus) {
                         "A" -> 5

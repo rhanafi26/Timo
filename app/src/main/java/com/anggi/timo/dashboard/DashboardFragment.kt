@@ -51,6 +51,7 @@ class DashboardFragment : Fragment() {
     private lateinit var tvAverageFocus: TextView
     private lateinit var tvProgress: TextView
     private lateinit var tvTimerMain: TextView
+    private var breakCount = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,7 +59,6 @@ class DashboardFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val rootView = inflater.inflate(R.layout.fragment_dashboard, container, false)
-
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
@@ -72,7 +72,6 @@ class DashboardFragment : Fragment() {
 
         return rootView
     }
-
     private fun initViews(view: View) {
         recyclerView = view.findViewById(R.id.recyclerViewDashboard)
         tvClock = view.findViewById(R.id.tvClock)
@@ -147,6 +146,8 @@ class DashboardFragment : Fragment() {
 
     private fun pauseTimer() {
         if (isRunning) {
+            breakCount++
+
             handler.removeCallbacks(runnable)
             isRunning = false
             timerIcon.setImageResource(R.drawable.ic_play)
@@ -172,7 +173,8 @@ class DashboardFragment : Fragment() {
         PilihJenisBelajarDialog { typeStudyId ->
             studyViewModel.saveTimeStudy(
                 typeStudyId = typeStudyId,
-                studyTime = seconds
+                studyTime = seconds,
+                breakTime = breakCount
             )
 
             Toast.makeText(
@@ -231,9 +233,8 @@ class DashboardFragment : Fragment() {
                     val id = document.id
                     val title = document.getString("title") ?: ""
                     val target = document.getLong("target")?.toInt() ?: 0
-
-                    studyViewModel.getTotalStudyTime(id) { totalStudy ->
-                        val focus = ProgressUtils.hitungTingkatFokus(totalStudy)
+                    studyViewModel.getTotalStudyTime(id) { totalStudy, totalBreak  ->
+                        val focus = ProgressUtils.hitungTingkatFokus(totalStudy, totalBreak )
                         val progress = ProgressUtils.hitungPersentase(totalStudy, target)
 
                         listDashboard.add(
