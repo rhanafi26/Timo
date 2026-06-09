@@ -24,7 +24,11 @@ class RoomBelajarViewModel(private val repository: LaporanBelajarRepository) : V
     fun getStatistikListHarian(tanggal: String): LiveData<List<StatistikPelajaran>> = repository.getStatistikListHarian(tanggal).asLiveData()
     fun getStatistikListMingguan(startDate: String, endDate: String): LiveData<List<StatistikPelajaran>> = repository.getStatistikListMingguan(startDate, endDate).asLiveData()
     fun getStatistikListBulanan(bulan: String): LiveData<List<StatistikPelajaran>> = repository.getStatistikListBulanan(bulan).asLiveData()
-
+//    fun getCount(callback: (Int) -> Unit) {
+//        viewModelScope.launch {
+//            callback(repository.getCount())
+//        }
+//    }
     // Fungsi eksekusi ke Room
     fun insert(laporan: LaporanBelajarEntity) = viewModelScope.launch { repository.insert(laporan) }
     fun delete(laporan: LaporanBelajarEntity) = viewModelScope.launch { repository.delete(laporan) }

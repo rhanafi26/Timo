@@ -22,11 +22,15 @@ import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
 class LaporanFragment : Fragment() {
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     private lateinit var pieChart: PieChart
     private lateinit var tvTanggal: TextView
@@ -53,7 +57,37 @@ class LaporanFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rootView = inflater.inflate(R.layout.fragment_laporan, container, false)
 
+        // jika kosong dao maka ambil dari firebase
+//        iki urung iso nambah nang database dao
+                db.collection("time_study")
+                    .whereEqualTo("userId", auth.currentUser?.uid)
+                    .get()
+                    .addOnSuccessListener { documents ->
+                        println("Jumlah dokumen: ${documents.size()}")
+                        documents.mapNotNull { doc ->
 
+                            val tanggal =
+                                doc.getString("tanggal") ?: return@mapNotNull null
+
+                            val jenisBelajar =
+                                doc.getString("typeStudyName") ?: ""
+
+                            val durasiFokus =
+                                doc.getLong("time")?.toInt() ?: 0
+
+                            val durasiIstirahat =
+                                doc.getLong("breakTime")?.toInt() ?: 0
+
+                            val laporan_baru = LaporanBelajarEntity(
+                                tanggal = tanggal,
+                                jenisBelajar = jenisBelajar,
+                                durasiFokus = durasiFokus,
+                                durasiIstirahat = durasiIstirahat
+                            )
+                            roomViewModel.insert(laporan_baru)
+
+                        }
+        }
         btnHarian = rootView.findViewById(R.id.btnHarian)
         btnMingguan = rootView.findViewById(R.id.btnMingguan)
         btnBulanan = rootView.findViewById(R.id.btnTahunan)
@@ -152,6 +186,7 @@ class LaporanFragment : Fragment() {
     private fun loadDailyReportRoom() {
         val tanggalDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(currentCalendar.time)
 
+        //ambil dari database dao filter bedasarkan hari dulu
         currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
         currentStatisticsLiveData = roomViewModel.getStatistikListHarian(tanggalDB)
         currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
@@ -162,6 +197,7 @@ class LaporanFragment : Fragment() {
     private fun loadWeeklyReportRoom() {
         val formatDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val endDateDB = formatDB.format(currentCalendar.time)
+        //ambil dari database dao filter bedasarkan minggu dulu
 
         val calStart = currentCalendar.clone() as Calendar
         calStart.add(Calendar.DAY_OF_MONTH, -6)
@@ -176,6 +212,7 @@ class LaporanFragment : Fragment() {
 
     private fun loadMonthlyReportRoom() {
         val bulanDB = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
+        //ambil dari database dao filter bedasarkan bulan dulu
 
         currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
         currentStatisticsLiveData = roomViewModel.getStatistikListBulanan(bulanDB)
@@ -189,7 +226,8 @@ class LaporanFragment : Fragment() {
         var totalBreak = 0
         val entries = mutableListOf<PieEntry>()
         val laporanBaru = mutableListOf<LaporanModel>()
-
+        val listFokus = mutableListOf<String>()
+        val listPresentasi = mutableListOf<String>()
         if (listPelajaran.isEmpty()) {
             adapter.updateData(emptyList())
             setupChart(emptyList(), title)
@@ -204,9 +242,9 @@ class LaporanFragment : Fragment() {
             totalFokus += item.totalFokus
             totalBreak += item.totalIstirahat
             entries.add(PieEntry(item.totalFokus.toFloat(), item.jenisBelajar))
-
+            val agregate = ProgressUtils.hitungTingkatFokus(item.totalFokus, item.totalIstirahat)
             laporanBaru.add(LaporanModel(
-                ProgressUtils.hitungTingkatFokus(item.totalFokus, item.totalIstirahat),
+                agregate,
                 item.jenisBelajar,
                 ProgressUtils.formatDuration(item.totalFokus)
             ))
@@ -214,9 +252,16 @@ class LaporanFragment : Fragment() {
 
         adapter.updateData(laporanBaru)
         setupChart(entries, title)
+        val average = if (listPresentasi.isNotEmpty()) {
+            listPresentasi
+                .map { it.replace("%", "").toInt() }
+                .average()
+        } else {
+            0.0
+        }
 
         tvBreak.text = totalBreak.toString()
-        tvFocus.text = ProgressUtils.hitungTingkatFokus(totalFokus, totalBreak)
+        tvFocus.text = ProgressUtils.calculateAverageFocus(listFokus)
         tvAverage.text = ProgressUtils.formatDuration(totalFokus / listPelajaran.size)
         tvAchievement.text = "100%"
     }

@@ -51,4 +51,36 @@ object ProgressUtils {
         }
     }
 
+    fun focusToScore(focus: String): Int {
+        return when (focus) {
+            "A" -> 5
+            "AB" -> 4
+            "B" -> 3
+            "BC" -> 2
+            "C" -> 1
+            else -> 0
+        }
+    }
+
+    fun scoreToFocus(score: Int): String {
+        return when (score) {
+            5 -> "A"
+            4 -> "AB"
+            3 -> "B"
+            2 -> "BC"
+            else -> "C"
+        }
+    }
+    fun calculateAverageFocus(focusList: List<String>): String {
+        if (focusList.isEmpty()) return "-"
+
+        val totalScore = focusList.sumOf {
+            focusToScore(it)
+        }
+
+        val average = totalScore / focusList.size
+
+        return scoreToFocus(average)
+    }
+
 }

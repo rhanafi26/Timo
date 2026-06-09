@@ -138,38 +138,25 @@ class StudyViewModel : ViewModel() {
             .whereEqualTo("userId", uid)
             .get()
             .addOnSuccessListener { documents ->
-                var totalScore = 0
-                var count = 0
+
+                val focusList = mutableListOf<String>()
 
                 for (document in documents) {
                     val time = document.getLong("time")?.toInt() ?: 0
                     val breakTime = document.getLong("breakTime")?.toInt() ?: 0
-                    val focus = ProgressUtils.hitungTingkatFokus(time, breakTime)
 
-                    totalScore += when (focus) {
-                        "A" -> 5
-                        "AB" -> 4
-                        "B" -> 3
-                        "BC" -> 2
-                        "C" -> 1
-                        else -> 0
-                    }
-                    count++
+                    focusList.add(
+                        ProgressUtils.hitungTingkatFokus(
+                            time,
+                            breakTime
+                        )
+                    )
                 }
 
-                if (count == 0) {
-                    callback("-")
-                    return@addOnSuccessListener
-                }
-                val average = totalScore / count
                 callback(
-                    when (average) {
-                        5 -> "A"
-                        4 -> "AB"
-                        3 -> "B"
-                        2 -> "BC"
-                        else -> "C"
-                    }
+                    ProgressUtils.calculateAverageFocus(
+                        focusList
+                    )
                 )
             }
             .addOnFailureListener {
