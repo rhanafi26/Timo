@@ -213,6 +213,8 @@ class DashboardFragment : Fragment() {
                         durasiFokus = waktuFokus,
                         durasiIstirahat = waktuIstirahat
                     )
+
+                    roomViewModel.insert(laporanBaru)
                 }
 
             Toast.makeText(

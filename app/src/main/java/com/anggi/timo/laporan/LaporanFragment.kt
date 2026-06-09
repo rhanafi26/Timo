@@ -44,6 +44,9 @@ class LaporanFragment : Fragment() {
     private lateinit var btnMingguan: TextView
     private lateinit var btnBulanan: TextView
 
+    private var ivArrowLeft: ImageView? = null
+    private var ivArrowRight: ImageView? = null
+
     private var currentCalendar = Calendar.getInstance()
     private var currentMode = "Harian"
     private var currentStatisticsLiveData: LiveData<List<StatistikPelajaran>>? = null
@@ -57,37 +60,6 @@ class LaporanFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rootView = inflater.inflate(R.layout.fragment_laporan, container, false)
 
-        // jika kosong dao maka ambil dari firebase
-//        iki urung iso nambah nang database dao
-                db.collection("time_study")
-                    .whereEqualTo("userId", auth.currentUser?.uid)
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        println("Jumlah dokumen: ${documents.size()}")
-                        documents.mapNotNull { doc ->
-
-                            val tanggal =
-                                doc.getString("tanggal") ?: return@mapNotNull null
-
-                            val jenisBelajar =
-                                doc.getString("typeStudyName") ?: ""
-
-                            val durasiFokus =
-                                doc.getLong("time")?.toInt() ?: 0
-
-                            val durasiIstirahat =
-                                doc.getLong("breakTime")?.toInt() ?: 0
-
-                            val laporan_baru = LaporanBelajarEntity(
-                                tanggal = tanggal,
-                                jenisBelajar = jenisBelajar,
-                                durasiFokus = durasiFokus,
-                                durasiIstirahat = durasiIstirahat
-                            )
-                            roomViewModel.insert(laporan_baru)
-
-                        }
-        }
         btnHarian = rootView.findViewById(R.id.btnHarian)
         btnMingguan = rootView.findViewById(R.id.btnMingguan)
         btnBulanan = rootView.findViewById(R.id.btnTahunan)
@@ -99,9 +71,8 @@ class LaporanFragment : Fragment() {
         tvBreak = rootView.findViewById(R.id.tvIstirahat)
         tvAchievement = rootView.findViewById(R.id.tvPencapaian)
 
-
-        val ivArrowLeft = rootView.findViewById<ImageView>(R.id.ivArrowLeft)
-        val ivArrowRight = rootView.findViewById<ImageView>(R.id.ivArrowRight)
+        ivArrowLeft = rootView.findViewById(R.id.ivArrowLeft)
+        ivArrowRight = rootView.findViewById(R.id.ivArrowRight)
 
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerViewLaporan)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -112,38 +83,82 @@ class LaporanFragment : Fragment() {
 
         btnBulanan.text = "Bulanan"
 
+        return rootView
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            roomViewModel.getCount { jumlah ->
+                if (jumlah == 0) {
+                    db.collection("time_study")
+                        .whereEqualTo("userId", userId)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            documents.forEach { doc ->
+                                val tanggalHariIni = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
+                                val tanggal = doc.getString("tanggal") ?: tanggalHariIni
+                                val durasiFokus = doc.getLong("time")?.toInt() ?: 0
+                                val durasiIstirahat = doc.getLong("breakTime")?.toInt() ?: 0
+
+                                val typeStudyId = doc.getString("typeStudyId") ?: ""
+                                val typeStudyName = doc.getString("typeStudyName")
+
+
+                                if (!typeStudyName.isNullOrEmpty()) {
+                                    val laporanBaru = LaporanBelajarEntity(
+                                        tanggal = tanggal,
+                                        jenisBelajar = typeStudyName,
+                                        durasiFokus = durasiFokus,
+                                        durasiIstirahat = durasiIstirahat
+                                    )
+                                    roomViewModel.insert(laporanBaru)
+                                } else if (typeStudyId.isNotEmpty()) {
+                                    db.collection("tujuan").document(typeStudyId).get()
+                                        .addOnSuccessListener { tDoc ->
+                                            val namaPelajaran = tDoc.getString("title") ?: "Pelajaran"
+                                            val laporanBaru = LaporanBelajarEntity(
+                                                tanggal = tanggal,
+                                                jenisBelajar = namaPelajaran,
+                                                durasiFokus = durasiFokus,
+                                                durasiIstirahat = durasiIstirahat
+                                            )
+                                            roomViewModel.insert(laporanBaru)
+                                        }
+                                }
+                            }
+                        }
+                }
+            }
+        }
+
         btnHarian.setOnClickListener {
             currentMode = "Harian"
-            currentCalendar = Calendar.getInstance() // Reset kalender ke hari ini
+            currentCalendar = Calendar.getInstance()
             setTabActive(btnHarian, btnMingguan, btnBulanan)
             updateDateAndLoadData()
         }
 
         btnMingguan.setOnClickListener {
             currentMode = "Mingguan"
-            currentCalendar = Calendar.getInstance() // Reset kalender ke minggu ini
+            currentCalendar = Calendar.getInstance()
             setTabActive(btnMingguan, btnHarian, btnBulanan)
             updateDateAndLoadData()
         }
 
         btnBulanan.setOnClickListener {
             currentMode = "Bulanan"
-            currentCalendar = Calendar.getInstance() // Reset kalender ke bulan ini
+            currentCalendar = Calendar.getInstance()
             setTabActive(btnBulanan, btnHarian, btnMingguan)
             updateDateAndLoadData()
         }
 
-
-        ivArrowLeft?.setOnClickListener {
-            navigateDate(-1)
-        }
-
-        ivArrowRight?.setOnClickListener {
-            navigateDate(1)
-        }
+        ivArrowLeft?.setOnClickListener { navigateDate(-1) }
+        ivArrowRight?.setOnClickListener { navigateDate(1) }
 
         btnHarian.performClick()
-        return rootView
     }
 
     private fun setTabActive(activeBtn: TextView, inactiveBtn1: TextView, inactiveBtn2: TextView) {
@@ -185,8 +200,6 @@ class LaporanFragment : Fragment() {
 
     private fun loadDailyReportRoom() {
         val tanggalDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(currentCalendar.time)
-
-        //ambil dari database dao filter bedasarkan hari dulu
         currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
         currentStatisticsLiveData = roomViewModel.getStatistikListHarian(tanggalDB)
         currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
@@ -197,8 +210,6 @@ class LaporanFragment : Fragment() {
     private fun loadWeeklyReportRoom() {
         val formatDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val endDateDB = formatDB.format(currentCalendar.time)
-        //ambil dari database dao filter bedasarkan minggu dulu
-
         val calStart = currentCalendar.clone() as Calendar
         calStart.add(Calendar.DAY_OF_MONTH, -6)
         val startDateDB = formatDB.format(calStart.time)
@@ -212,8 +223,6 @@ class LaporanFragment : Fragment() {
 
     private fun loadMonthlyReportRoom() {
         val bulanDB = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
-        //ambil dari database dao filter bedasarkan bulan dulu
-
         currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
         currentStatisticsLiveData = roomViewModel.getStatistikListBulanan(bulanDB)
         currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
@@ -227,7 +236,7 @@ class LaporanFragment : Fragment() {
         val entries = mutableListOf<PieEntry>()
         val laporanBaru = mutableListOf<LaporanModel>()
         val listFokus = mutableListOf<String>()
-        val listPresentasi = mutableListOf<String>()
+
         if (listPelajaran.isEmpty()) {
             adapter.updateData(emptyList())
             setupChart(emptyList(), title)
@@ -242,7 +251,10 @@ class LaporanFragment : Fragment() {
             totalFokus += item.totalFokus
             totalBreak += item.totalIstirahat
             entries.add(PieEntry(item.totalFokus.toFloat(), item.jenisBelajar))
+
             val agregate = ProgressUtils.hitungTingkatFokus(item.totalFokus, item.totalIstirahat)
+            listFokus.add(agregate)
+
             laporanBaru.add(LaporanModel(
                 agregate,
                 item.jenisBelajar,
@@ -252,13 +264,6 @@ class LaporanFragment : Fragment() {
 
         adapter.updateData(laporanBaru)
         setupChart(entries, title)
-        val average = if (listPresentasi.isNotEmpty()) {
-            listPresentasi
-                .map { it.replace("%", "").toInt() }
-                .average()
-        } else {
-            0.0
-        }
 
         tvBreak.text = totalBreak.toString()
         tvFocus.text = ProgressUtils.calculateAverageFocus(listFokus)
