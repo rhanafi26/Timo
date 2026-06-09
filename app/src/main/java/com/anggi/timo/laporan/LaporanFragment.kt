@@ -98,8 +98,22 @@ class LaporanFragment : Fragment() {
                         .get()
                         .addOnSuccessListener { documents ->
                             documents.forEach { doc ->
-                                val tanggalHariIni = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
-                                val tanggal = doc.getString("tanggal") ?: tanggalHariIni
+
+                                val tanggal = doc.getString("created") ?: ""
+                                val inputFormat = SimpleDateFormat(
+                                    "dd-MM-yyyy HH:mm",
+                                    Locale.getDefault()
+                                )
+
+                                val outputFormat = SimpleDateFormat(
+                                    "yyyy-MM-dd",
+                                    Locale.getDefault()
+                                )
+
+                                val date = inputFormat.parse(tanggal)
+
+                                val tanggalBaru = outputFormat.format(date!!)
+
                                 val durasiFokus = doc.getLong("time")?.toInt() ?: 0
                                 val durasiIstirahat = doc.getLong("breakTime")?.toInt() ?: 0
 
@@ -109,18 +123,19 @@ class LaporanFragment : Fragment() {
 
                                 if (!typeStudyName.isNullOrEmpty()) {
                                     val laporanBaru = LaporanBelajarEntity(
-                                        tanggal = tanggal,
+                                        tanggal = tanggalBaru,
                                         jenisBelajar = typeStudyName,
                                         durasiFokus = durasiFokus,
                                         durasiIstirahat = durasiIstirahat
                                     )
                                     roomViewModel.insert(laporanBaru)
-                                } else if (typeStudyId.isNotEmpty()) {
+                                }
+                                else if (typeStudyId.isNotEmpty()) {
                                     db.collection("tujuan").document(typeStudyId).get()
                                         .addOnSuccessListener { tDoc ->
                                             val namaPelajaran = tDoc.getString("title") ?: "Pelajaran"
                                             val laporanBaru = LaporanBelajarEntity(
-                                                tanggal = tanggal,
+                                                tanggal = tanggalBaru,
                                                 jenisBelajar = namaPelajaran,
                                                 durasiFokus = durasiFokus,
                                                 durasiIstirahat = durasiIstirahat
