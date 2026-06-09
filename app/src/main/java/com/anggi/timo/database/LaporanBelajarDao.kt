@@ -40,6 +40,9 @@ interface LaporanBelajarDao {
     @Query("SELECT jenisBelajar, SUM(durasiFokus) as totalFokus, SUM(durasiIstirahat) as totalIstirahat, (SUM(durasiFokus) + SUM(durasiIstirahat)) as totalBelajar FROM tabel_laporan_belajar WHERE tanggal LIKE :bulan || '%' GROUP BY jenisBelajar ORDER BY totalFokus DESC")
     fun getStatistikListBulanan(bulan: String): Flow<List<StatistikPelajaran>>
 
+    @Query("SELECT COUNT(*) FROM tabel_laporan_belajar")
+    suspend fun getCount(): Int
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLaporan(laporan: LaporanBelajarEntity)
@@ -49,4 +52,7 @@ interface LaporanBelajarDao {
 
     @Delete
     suspend fun deleteLaporan(laporan: LaporanBelajarEntity)
+
+    @Query("DELETE FROM tabel_laporan_belajar")
+    suspend fun clearSemuaData()
 }

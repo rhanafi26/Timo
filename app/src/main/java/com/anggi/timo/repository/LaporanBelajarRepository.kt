@@ -18,7 +18,11 @@ class LaporanBelajarRepository(private val dao: LaporanBelajarDao) {
     fun getStatistikListMingguan(startDate: String, endDate: String) = dao.getStatistikListMingguan(startDate, endDate)
     fun getStatistikListBulanan(bulan: String) = dao.getStatistikListBulanan(bulan)
 
+    suspend fun getCount(): Int = dao.getCount()
+
     suspend fun insert(laporan: LaporanBelajarEntity) { dao.insertLaporan(laporan) }
     suspend fun update(laporan: LaporanBelajarEntity) { dao.updateLaporan(laporan) }
     suspend fun delete(laporan: LaporanBelajarEntity) { dao.deleteLaporan(laporan) }
+
+    suspend fun clearSemuaData() { dao.clearSemuaData() }
 }
