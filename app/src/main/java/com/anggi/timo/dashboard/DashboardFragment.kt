@@ -133,7 +133,12 @@ class DashboardFragment : Fragment() {
         }
 
         btnTambah.setOnClickListener {
-            TambahTujuanDialog().show(parentFragmentManager, "TambahTujuanDialog")
+            TambahTujuanDialog {
+                loadTargetBelajar()
+            }.show(
+                parentFragmentManager,
+                "TambahTujuanDialog"
+            )
         }
 
         btnFinish.setOnClickListener {
@@ -222,7 +227,6 @@ class DashboardFragment : Fragment() {
             breakCount = 0
             updateTimerText()
 
-            loadDashboardSummary()
             loadTargetBelajar()
 
         }.show(parentFragmentManager, "PilihJenisBelajarDialog")
@@ -272,7 +276,6 @@ class DashboardFragment : Fragment() {
                     studyViewModel.getTotalStudyTime(id) { totalStudy, totalBreak  ->
                         val focus = ProgressUtils.hitungTingkatFokus(totalStudy, totalBreak )
                         val progress = ProgressUtils.hitungPersentase(totalStudy, target)
-
                         listDashboard.add(
                             DashboardModel(
                                 focus,
