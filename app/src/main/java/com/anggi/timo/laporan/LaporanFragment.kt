@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.anggi.timo.R
@@ -34,7 +36,14 @@ class LaporanFragment : Fragment() {
     private lateinit var tvAchievement: TextView
     private lateinit var adapter: LaporanAdapter
 
-    // Gunakan ViewModel Room
+    private lateinit var btnHarian: TextView
+    private lateinit var btnMingguan: TextView
+    private lateinit var btnBulanan: TextView
+
+    private var currentCalendar = Calendar.getInstance()
+    private var currentMode = "Harian"
+    private var currentStatisticsLiveData: LiveData<List<StatistikPelajaran>>? = null
+
     private val roomViewModel: RoomBelajarViewModel by viewModels {
         val database = AppDatabase.getDatabase(requireContext())
         val repository = LaporanBelajarRepository(database.laporanBelajarDao())
@@ -44,10 +53,10 @@ class LaporanFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val rootView = inflater.inflate(R.layout.fragment_laporan, container, false)
 
-        // Binding UI
-        val btnHarian = rootView.findViewById<TextView>(R.id.btnHarian)
-        val btnMingguan = rootView.findViewById<TextView>(R.id.btnMingguan)
-        val btnBulanan = rootView.findViewById<TextView>(R.id.btnTahunan)
+
+        btnHarian = rootView.findViewById(R.id.btnHarian)
+        btnMingguan = rootView.findViewById(R.id.btnMingguan)
+        btnBulanan = rootView.findViewById(R.id.btnTahunan)
 
         pieChart = rootView.findViewById(R.id.pieChart)
         tvTanggal = rootView.findViewById(R.id.tvTanggal)
@@ -56,57 +65,121 @@ class LaporanFragment : Fragment() {
         tvBreak = rootView.findViewById(R.id.tvIstirahat)
         tvAchievement = rootView.findViewById(R.id.tvPencapaian)
 
+
+        val ivArrowLeft = rootView.findViewById<ImageView>(R.id.ivArrowLeft)
+        val ivArrowRight = rootView.findViewById<ImageView>(R.id.ivArrowRight)
+
         val recyclerView = rootView.findViewById<RecyclerView>(R.id.recyclerViewLaporan)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Inisialisasi adapter dengan list kosong
         adapter = LaporanAdapter(mutableListOf())
         recyclerView.adapter = adapter
         recyclerView.isNestedScrollingEnabled = false
 
         btnBulanan.text = "Bulanan"
 
-        // Logic Tombol
         btnHarian.setOnClickListener {
-            tvTanggal.text = getTodayDate()
-            loadDailyReportRoom()
+            currentMode = "Harian"
+            currentCalendar = Calendar.getInstance() // Reset kalender ke hari ini
+            setTabActive(btnHarian, btnMingguan, btnBulanan)
+            updateDateAndLoadData()
         }
+
         btnMingguan.setOnClickListener {
-            tvTanggal.text = getLast7DaysRange()
-            loadWeeklyReportRoom()
+            currentMode = "Mingguan"
+            currentCalendar = Calendar.getInstance() // Reset kalender ke minggu ini
+            setTabActive(btnMingguan, btnHarian, btnBulanan)
+            updateDateAndLoadData()
         }
+
         btnBulanan.setOnClickListener {
-            tvTanggal.text = getLast30DaysRange()
-            loadMonthlyReportRoom()
+            currentMode = "Bulanan"
+            currentCalendar = Calendar.getInstance() // Reset kalender ke bulan ini
+            setTabActive(btnBulanan, btnHarian, btnMingguan)
+            updateDateAndLoadData()
+        }
+
+
+        ivArrowLeft?.setOnClickListener {
+            navigateDate(-1)
+        }
+
+        ivArrowRight?.setOnClickListener {
+            navigateDate(1)
         }
 
         btnHarian.performClick()
         return rootView
     }
 
+    private fun setTabActive(activeBtn: TextView, inactiveBtn1: TextView, inactiveBtn2: TextView) {
+        activeBtn.setBackgroundColor(Color.WHITE)
+        activeBtn.setTextColor(Color.parseColor("#1A94FF"))
+
+        inactiveBtn1.setBackgroundColor(Color.TRANSPARENT)
+        inactiveBtn1.setTextColor(Color.WHITE)
+
+        inactiveBtn2.setBackgroundColor(Color.TRANSPARENT)
+        inactiveBtn2.setTextColor(Color.WHITE)
+    }
+
+    private fun navigateDate(direction: Int) {
+        when (currentMode) {
+            "Harian" -> currentCalendar.add(Calendar.DAY_OF_MONTH, direction)
+            "Mingguan" -> currentCalendar.add(Calendar.DAY_OF_MONTH, direction * 7)
+            "Bulanan" -> currentCalendar.add(Calendar.MONTH, direction)
+        }
+        updateDateAndLoadData()
+    }
+
+    private fun updateDateAndLoadData() {
+        when (currentMode) {
+            "Harian" -> {
+                tvTanggal.text = getTodayDate()
+                loadDailyReportRoom()
+            }
+            "Mingguan" -> {
+                tvTanggal.text = getLast7DaysRange()
+                loadWeeklyReportRoom()
+            }
+            "Bulanan" -> {
+                tvTanggal.text = getLast30DaysRange()
+                loadMonthlyReportRoom()
+            }
+        }
+    }
+
     private fun loadDailyReportRoom() {
-        val tanggalDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
-        roomViewModel.getStatistikListHarian(tanggalDB).observe(viewLifecycleOwner) { list ->
+        val tanggalDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(currentCalendar.time)
+
+        currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
+        currentStatisticsLiveData = roomViewModel.getStatistikListHarian(tanggalDB)
+        currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Harian")
         }
     }
 
     private fun loadWeeklyReportRoom() {
-        val cal = Calendar.getInstance()
         val formatDB = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val endDateDB = formatDB.format(cal.time)
-        cal.add(Calendar.DAY_OF_MONTH, -7)
-        val startDateDB = formatDB.format(cal.time)
+        val endDateDB = formatDB.format(currentCalendar.time)
 
-        roomViewModel.getStatistikListMingguan(startDateDB, endDateDB).observe(viewLifecycleOwner) { list ->
+        val calStart = currentCalendar.clone() as Calendar
+        calStart.add(Calendar.DAY_OF_MONTH, -6)
+        val startDateDB = formatDB.format(calStart.time)
+
+        currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
+        currentStatisticsLiveData = roomViewModel.getStatistikListMingguan(startDateDB, endDateDB)
+        currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Mingguan")
         }
     }
 
     private fun loadMonthlyReportRoom() {
-        val bulanDB = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Calendar.getInstance().time)
+        val bulanDB = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
 
-        roomViewModel.getStatistikListBulanan(bulanDB).observe(viewLifecycleOwner) { list ->
+        currentStatisticsLiveData?.removeObservers(viewLifecycleOwner)
+        currentStatisticsLiveData = roomViewModel.getStatistikListBulanan(bulanDB)
+        currentStatisticsLiveData?.observe(viewLifecycleOwner) { list ->
             processRoomDataToUI(list ?: emptyList(), "Bulanan")
         }
     }
@@ -130,9 +203,7 @@ class LaporanFragment : Fragment() {
         for (item in listPelajaran) {
             totalFokus += item.totalFokus
             totalBreak += item.totalIstirahat
-
             entries.add(PieEntry(item.totalFokus.toFloat(), item.jenisBelajar))
-
 
             laporanBaru.add(LaporanModel(
                 ProgressUtils.hitungTingkatFokus(item.totalFokus, item.totalIstirahat),
@@ -146,7 +217,6 @@ class LaporanFragment : Fragment() {
 
         tvBreak.text = totalBreak.toString()
         tvFocus.text = ProgressUtils.hitungTingkatFokus(totalFokus, totalBreak)
-
         tvAverage.text = ProgressUtils.formatDuration(totalFokus / listPelajaran.size)
         tvAchievement.text = "100%"
     }
@@ -158,7 +228,21 @@ class LaporanFragment : Fragment() {
         pieChart.invalidate()
     }
 
-    private fun getTodayDate() = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
-    private fun getLast7DaysRange() = "7 Hari Terakhir"
-    private fun getLast30DaysRange() = "30 Hari Terakhir"
+    private fun getTodayDate(): String {
+        return SimpleDateFormat("EEE, dd/MMM/yyyy", Locale("id", "ID")).format(currentCalendar.time)
+    }
+
+    private fun getLast7DaysRange(): String {
+        val formatUI = SimpleDateFormat("dd MMM", Locale("id", "ID"))
+        val endDate = formatUI.format(currentCalendar.time)
+        val calStart = currentCalendar.clone() as Calendar
+        calStart.add(Calendar.DAY_OF_MONTH, -6)
+        val startDate = formatUI.format(calStart.time)
+
+        return "$startDate - $endDate"
+    }
+
+    private fun getLast30DaysRange(): String {
+        return SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(currentCalendar.time)
+    }
 }
