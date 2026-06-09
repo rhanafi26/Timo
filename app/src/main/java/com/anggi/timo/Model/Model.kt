@@ -1,5 +1,7 @@
 package com.anggi.timo.Model
 
+import com.google.firebase.firestore.Exclude
+
 data class User(
     val id: Int,
     val username: String,
@@ -8,7 +10,9 @@ data class User(
 )
 
 data class TypeStudy(
+    @get:Exclude
     var id: String = "",
+    
     val title: String = "",
     val target: Int=0,
     val userId: String=""

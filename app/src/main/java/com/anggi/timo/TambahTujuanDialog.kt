@@ -10,8 +10,9 @@ import androidx.fragment.app.DialogFragment
 import com.anggi.timo.ViewModel.StudyViewModel
 import com.anggi.timo.utils.ProgressUtils
 
-class TambahTujuanDialog : DialogFragment() {
-
+class TambahTujuanDialog(
+    private val onSuccess: (() -> Unit)? = null
+) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(requireContext())
         val inflater = requireActivity().layoutInflater
@@ -40,12 +41,12 @@ class TambahTujuanDialog : DialogFragment() {
                 judul = judul,
                 waktu = waktuDetik,
                 onSuccess = {
-
                     Toast.makeText(
                         requireContext(),
                         "Tujuan berhasil ditambahkan",
                         Toast.LENGTH_SHORT
                     ).show()
+                    onSuccess?.invoke()
 
                     dismiss()
                 },
