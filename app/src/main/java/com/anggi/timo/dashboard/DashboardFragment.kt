@@ -18,11 +18,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.anggi.timo.R
 import com.anggi.timo.TambahTujuanDialog
+import com.anggi.timo.ViewModel.RoomBelajarViewModel
+import com.anggi.timo.ViewModel.RoomBelajarViewModelFactory
 import com.anggi.timo.ViewModel.StudyViewModel
+import com.anggi.timo.database.AppDatabase
 import com.anggi.timo.dialogJenisBelajar.PilihJenisBelajarDialog
+import com.anggi.timo.laporan.LaporanBelajarEntity
+import com.anggi.timo.repository.LaporanBelajarRepository
 import com.anggi.timo.utils.ProgressUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class DashboardFragment : Fragment() {
 
@@ -30,6 +38,12 @@ class DashboardFragment : Fragment() {
     private lateinit var db: FirebaseFirestore
 
     private val studyViewModel: StudyViewModel by viewModels()
+
+    private val roomViewModel: RoomBelajarViewModel by viewModels {
+        val database = AppDatabase.getDatabase(requireContext())
+        val repository = LaporanBelajarRepository(database.laporanBelajarDao())
+        RoomBelajarViewModelFactory(repository)
+    }
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: DashboardAdapter
@@ -171,11 +185,31 @@ class DashboardFragment : Fragment() {
         pauseTimer()
 
         PilihJenisBelajarDialog { typeStudyId ->
+
+            val waktuFokus = seconds
+            val waktuIstirahat = breakCount
+
+
             studyViewModel.saveTimeStudy(
                 typeStudyId = typeStudyId,
-                studyTime = seconds,
-                breakTime = breakCount
+                studyTime = waktuFokus,
+                breakTime = waktuIstirahat
             )
+
+            db.collection("tujuan").document(typeStudyId).get()
+                .addOnSuccessListener { document ->
+                    val namaPelajaran = document.getString("title") ?: "Lainnya"
+
+
+                    val tanggalHariIni = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().time)
+                    val laporanBaru = LaporanBelajarEntity(
+                        tanggal = tanggalHariIni,
+                        jenisBelajar = namaPelajaran,
+                        durasiFokus = waktuFokus,
+                        durasiIstirahat = waktuIstirahat
+                    )
+                    roomViewModel.insert(laporanBaru)
+                }
 
             Toast.makeText(
                 requireContext(),
@@ -183,7 +217,9 @@ class DashboardFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
 
+            // Reset Timer dan Istirahat untuk sesi selanjutnya
             seconds = 0
+            breakCount = 0
             updateTimerText()
 
             loadDashboardSummary()
